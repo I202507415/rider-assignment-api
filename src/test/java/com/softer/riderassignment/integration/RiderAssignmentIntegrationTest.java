@@ -16,6 +16,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.http.HttpMethod;
 import java.util.List;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -175,6 +177,83 @@ public class RiderAssignmentIntegrationTest {
 
 
         assertTrue(repository.existsById(saved.getId()));
+    }
+
+    @Test
+    void shouldUpdateAssignmentIntegration() {
+
+
+        RiderAssignment assignment = new RiderAssignment(
+                null,
+                9005L,
+                605L,
+                AssignmentStatus.ASSIGNED,
+                null
+        );
+
+        RiderAssignment saved = repository.saveAndFlush(assignment);
+
+
+        RiderAssignment updateRequest = new RiderAssignment(
+                null,
+                9005L,
+                606L,
+                AssignmentStatus.ACCEPTED,
+                null
+        );
+
+
+        ResponseEntity<RiderAssignment> response =
+                restTemplate.exchange(
+                        "/api/assignments/" + saved.getId(),
+                        HttpMethod.PUT,
+                        new HttpEntity<>(updateRequest),
+                        RiderAssignment.class
+                );
+
+
+        assertEquals(
+                HttpStatus.OK,
+                response.getStatusCode()
+        );
+
+        assertNotNull(response.getBody());
+
+
+        assertEquals(
+                saved.getId(),
+                response.getBody().getId()
+        );
+
+        assertEquals(
+                9005L,
+                response.getBody().getDeliveryId()
+        );
+
+        assertEquals(
+                606L,
+                response.getBody().getRiderId()
+        );
+
+        assertEquals(
+                AssignmentStatus.ACCEPTED,
+                response.getBody().getStatus()
+        );
+
+
+        RiderAssignment updated = repository.findById(
+                saved.getId()
+        ).orElseThrow();
+
+        assertEquals(606L, updated.getRiderId());
+
+        assertEquals(
+                AssignmentStatus.ACCEPTED,
+                updated.getStatus()
+        );
+
+
+        assertEquals(1, repository.count());
     }
 
 
