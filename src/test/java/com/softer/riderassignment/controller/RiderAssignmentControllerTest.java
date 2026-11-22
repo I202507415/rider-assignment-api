@@ -89,6 +89,30 @@ class RiderAssignmentControllerTest {
         verify(service).delete(1L);
     }
 
+    @Test
+    void shouldUpdateAssignment() throws Exception {
+        RiderAssignment updated = new RiderAssignment(
+                1L,
+                1001L,
+                502L,
+                AssignmentStatus.ACCEPTED,
+                LocalDateTime.of(2026, 11, 18, 10, 0)
+        );
+
+        when(service.update(eq(1L), any(RiderAssignment.class)))
+                .thenReturn(updated);
+
+        mockMvc.perform(put("/api/assignments/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updated)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.riderId").value(502))
+                .andExpect(jsonPath("$.status").value("ACCEPTED"));
+
+        verify(service).update(eq(1L), any(RiderAssignment.class));
+    }
+
     private RiderAssignment sample() {
         return new RiderAssignment(
                 1L, 1001L, 501L, AssignmentStatus.ASSIGNED, LocalDateTime.of(2026, 11, 18, 10, 0));
