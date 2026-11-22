@@ -13,6 +13,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import com.softer.riderassignment.exception.BusinessRuleException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -131,6 +132,28 @@ class RiderAssignmentControllerTest {
                 ));
 
         verify(service).findById(999L);
+    }
+
+    @Test
+    void shouldReturnConflictWhenDeliveryAlreadyAssigned()
+            throws Exception {
+
+        when(service.create(any(RiderAssignment.class)))
+                .thenThrow(new BusinessRuleException(
+                        "El delivery 1001 ya tiene una asignación registrada"
+                ));
+
+        mockMvc.perform(post("/api/assignments")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(sample())))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.status").value(409))
+                .andExpect(jsonPath("$.error").value("Conflict"))
+                .andExpect(jsonPath("$.message").value(
+                        "El delivery 1001 ya tiene una asignación registrada"
+                ));
+
+        verify(service).create(any(RiderAssignment.class));
     }
 
     private RiderAssignment sample() {
