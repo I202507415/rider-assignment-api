@@ -257,4 +257,49 @@ public class RiderAssignmentIntegrationTest {
     }
 
 
+    @Test
+    void shouldDeleteAssignmentIntegration() {
+        RiderAssignment assignment = new RiderAssignment(
+                null,
+                9006L,
+                607L,
+                AssignmentStatus.ASSIGNED,
+                null
+        );
+
+        RiderAssignment saved = repository.saveAndFlush(assignment);
+
+        Long assignmentId = saved.getId();
+
+        assertTrue(repository.existsById(assignmentId));
+        assertEquals(1, repository.count());
+
+        ResponseEntity<Void> response =
+                restTemplate.exchange(
+                        "/api/assignments/" + assignmentId,
+                        HttpMethod.DELETE,
+                        HttpEntity.EMPTY,
+                        Void.class
+                );
+
+        assertEquals(
+                HttpStatus.NO_CONTENT,
+                response.getStatusCode()
+        );
+
+        assertFalse(repository.existsById(assignmentId));
+        assertEquals(0, repository.count());
+
+        ResponseEntity<String> getResponse =
+                restTemplate.getForEntity(
+                        "/api/assignments/" + assignmentId,
+                        String.class
+                );
+
+        assertEquals(
+                HttpStatus.NOT_FOUND,
+                getResponse.getStatusCode()
+        );
+    }
+
 }
