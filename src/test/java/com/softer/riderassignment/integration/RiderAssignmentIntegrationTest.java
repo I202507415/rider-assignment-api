@@ -122,5 +122,60 @@ public class RiderAssignmentIntegrationTest {
         assertTrue(deliveryIds.contains(9003L));
     }
 
+    @Test
+    void shouldReturnAssignmentByIdIntegration() {
+
+        RiderAssignment assignment = new RiderAssignment(
+                null,
+                9004L,
+                604L,
+                AssignmentStatus.ASSIGNED,
+                null
+        );
+
+        RiderAssignment saved = repository.saveAndFlush(assignment);
+
+
+        ResponseEntity<RiderAssignment> response =
+                restTemplate.getForEntity(
+                        "/api/assignments/" + saved.getId(),
+                        RiderAssignment.class
+                );
+
+
+        assertEquals(
+                HttpStatus.OK,
+                response.getStatusCode()
+        );
+
+        assertNotNull(response.getBody());
+
+
+        assertEquals(
+                saved.getId(),
+                response.getBody().getId()
+        );
+
+        assertEquals(
+                9004L,
+                response.getBody().getDeliveryId()
+        );
+
+        assertEquals(
+                604L,
+                response.getBody().getRiderId()
+        );
+
+        assertEquals(
+                AssignmentStatus.ASSIGNED,
+                response.getBody().getStatus()
+        );
+
+        assertNotNull(response.getBody().getAssignedAt());
+
+
+        assertTrue(repository.existsById(saved.getId()));
+    }
+
 
 }
