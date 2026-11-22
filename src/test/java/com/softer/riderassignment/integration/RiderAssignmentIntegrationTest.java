@@ -14,6 +14,8 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.http.HttpMethod;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -65,4 +67,60 @@ public class RiderAssignmentIntegrationTest {
 
         assertEquals(1, repository.count());
     }
+
+    @Test
+    void shouldReturnAllAssignmentsIntegration() {
+
+        // ARRANGE: registrar dos asignaciones en H2
+        RiderAssignment first = new RiderAssignment(
+                null,
+                9002L,
+                602L,
+                AssignmentStatus.ASSIGNED,
+                null
+        );
+
+        RiderAssignment second = new RiderAssignment(
+                null,
+                9003L,
+                603L,
+                AssignmentStatus.ASSIGNED,
+                null
+        );
+
+        repository.saveAll(List.of(first, second));
+
+        // ACT: realizar una petición GET real
+        ResponseEntity<RiderAssignment[]> response =
+                restTemplate.getForEntity(
+                        "/api/assignments",
+                        RiderAssignment[].class
+                );
+
+        // ASSERT: verificar la respuesta HTTP
+        assertEquals(
+                HttpStatus.OK,
+                response.getStatusCode()
+        );
+
+        assertNotNull(response.getBody());
+
+        // Verificar que devuelve dos asignaciones
+        assertEquals(2, response.getBody().length);
+
+        // Verificar que los registros existen en H2
+        assertEquals(2, repository.count());
+
+        // Verificar los datos recibidos
+        List<Long> deliveryIds = java.util.Arrays.stream(
+                        response.getBody()
+                )
+                .map(RiderAssignment::getDeliveryId)
+                .toList();
+
+        assertTrue(deliveryIds.contains(9002L));
+        assertTrue(deliveryIds.contains(9003L));
+    }
+
+
 }
