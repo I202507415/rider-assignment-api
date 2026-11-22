@@ -113,8 +113,54 @@ class RiderAssignmentControllerTest {
         verify(service).update(eq(1L), any(RiderAssignment.class));
     }
 
+    @Test
+    void shouldReturnNotFoundWhenAssignmentDoesNotExist()
+            throws Exception {
+
+        when(service.findById(999L))
+                .thenThrow(new ResourceNotFoundException(
+                        "No existe una asignación con identificador 999"
+                ));
+
+        mockMvc.perform(get("/api/assignments/999"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.error").value("Not Found"))
+                .andExpect(jsonPath("$.message").value(
+                        "No existe una asignación con identificador 999"
+                ));
+
+        verify(service).findById(999L);
+    }
+
     private RiderAssignment sample() {
         return new RiderAssignment(
                 1L, 1001L, 501L, AssignmentStatus.ASSIGNED, LocalDateTime.of(2026, 11, 18, 10, 0));
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
