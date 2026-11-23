@@ -302,4 +302,54 @@ public class RiderAssignmentIntegrationTest {
         );
     }
 
+    @Test
+    void shouldRejectDuplicateDeliveryIntegration() {
+        RiderAssignment existingAssignment = new RiderAssignment(
+                null,
+                9007L,
+                608L,
+                AssignmentStatus.ASSIGNED,
+                null
+        );
+
+        RiderAssignment saved =
+                repository.saveAndFlush(existingAssignment);
+
+        RiderAssignment duplicateRequest = new RiderAssignment(
+                null,
+                9007L,
+                609L,
+                AssignmentStatus.ASSIGNED,
+                null
+        );
+
+        ResponseEntity<String> response =
+                restTemplate.postForEntity(
+                        "/api/assignments",
+                        duplicateRequest,
+                        String.class
+                );
+
+        assertEquals(
+                HttpStatus.CONFLICT,
+                response.getStatusCode()
+        );
+
+        assertNotNull(response.getBody());
+
+        RiderAssignment original = repository.findById(
+                saved.getId()
+        ).orElseThrow();
+
+        assertEquals(
+                9007L,
+                original.getDeliveryId()
+        );
+
+        assertEquals(
+                608L,
+                original.getRiderId()
+        );
+        assertEquals(1, repository.count());
+    }
 }
